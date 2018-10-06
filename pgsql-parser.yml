@@ -4,6 +4,6 @@ provider:
 
 functions:
   pgsql-parser:
-    lang: node
+    lang: dockerfile
     handler: ./pgsql-parser
     image: pyramation/pgsql-parser:latest
