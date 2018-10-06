@@ -1,5 +1,11 @@
 # use pgsql parser via openfaas!
 
+This makes a openfaas function for https://github.com/pyramation/pg-query-parser
+
+Docker Hub: https://hub.docker.com/r/pyramation/pgsql-parser/
+
+Example usage/test:
+
 ```sh
 make test
 echo "select 1" |  faas-cli invoke pgsql-parser --gateway http://127.0.0.1:31112 --content-type application/sql
