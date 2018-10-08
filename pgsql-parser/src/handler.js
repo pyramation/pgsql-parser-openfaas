@@ -1,56 +1,34 @@
-'use strict';
-
 const parser = require('pgsql-parser');
 
-const handler = (context, callback) => {
+module.exports = (request, response) => {
+
   let contentType = null;
   let content = null;
+  let statusCode = 200;
 
   try {
-    switch (context.contentType) {
+    switch (request.headers['content-type']) {
     case 'application/sql':
     case 'application/x-sql':
-      content = parser.parse(context.content).query;
+    case 'text/plain':
+      content = JSON.stringify(parser.parse(request.body).query);
       contentType = 'application/json';
       break;
     case 'application/json':
-      content = parser.deparse(JSON.parse(context.content));
+      content = parser.deparse(JSON.parse(request.body));
       contentType = 'text/plain';
       break;
     default:
-      throw new Error('unsupported!');
+      throw new Error('unsupported type!');
     }
   } catch (e) {
-    return callback(e);
+    statusCode = 500;
+    content = e.message;
+    contentType = 'text/plain';
   }
 
-  callback(undefined, {
-    contentType,
-    content
-  });
-};
+  response.setHeader('Content-Type', contentType);
+  response.statusCode = statusCode;
+  response.end(content);
 
-const getStdin = require('get-stdin');
-
-getStdin().then(content => {
-  handler({content, contentType: process.env.Http_Content_Type}, (err, res) => {
-    if (err) {
-      return process.stderr.write(err);
-    }
-    if (isArray(res) || isObject(res)) {
-      process.stdout.write(JSON.stringify(res));
-    } else {
-      process.stdout.write(res);
-    }
-  });
-}).catch(e => {
-  process.stderr.write(e.stack + '');
-});
-
-const isArray = (a) => {
-  return (!!a) && (a.constructor === Array);
-};
-
-const isObject = (a) => {
-  return (!!a) && (a.constructor === Object);
 };
